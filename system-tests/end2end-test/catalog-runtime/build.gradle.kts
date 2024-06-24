@@ -28,7 +28,6 @@ dependencies {
     runtimeOnly(libs.bundles.edc.connector)
     runtimeOnly(libs.edc.core.controlplane)
     runtimeOnly(libs.edc.core.jetty)
-    runtimeOnly(libs.edc.core.dataPlane.selector)
     runtimeOnly(libs.edc.lib.providers.jersey)
     runtimeOnly(libs.edc.lib.boot)
 

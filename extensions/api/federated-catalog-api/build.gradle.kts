@@ -20,10 +20,12 @@ plugins {
 dependencies {
     api(project(":spi:federated-catalog-spi"))
     api(libs.edc.spi.core)
+    api(libs.edc.spi.contract)
     implementation(libs.edc.spi.transform)
     implementation(libs.edc.spi.web)
+    implementation(libs.edc.lib.jerseyproviders)
+    implementation(libs.edc.core.api) // for the ApiCoreSchema
 
-    implementation(libs.edc.api.management.config)
     runtimeOnly(libs.edc.spi.jsonld)
     runtimeOnly(libs.edc.json.ld.lib)
 
@@ -38,8 +40,9 @@ dependencies {
     testImplementation(libs.edc.iam.mock)
     testImplementation(libs.edc.json.ld.lib)
     testImplementation(libs.edc.dsp.transform.catalog)
-    testImplementation(libs.edc.dsp.transform.catalog)
-
+    testImplementation(testFixtures(libs.edc.core.jersey))
+    testImplementation(libs.edc.lib.transform)
+    testImplementation(libs.edc.lib.query)
 }
 
 edcBuild {

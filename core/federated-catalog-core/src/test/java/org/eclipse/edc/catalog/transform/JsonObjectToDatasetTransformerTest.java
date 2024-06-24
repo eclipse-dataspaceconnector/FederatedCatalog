@@ -125,6 +125,32 @@ class JsonObjectToDatasetTransformerTest {
         verify(context, times(1)).transform(any(JsonValue.class), eq(Object.class));
     }
 
+    @Test
+    void transform_dataset_withoutDistribution() {
+        var policyId = "policy-id";
+        var policyJson = getJsonObject(policyId, "policy");
+        var distributionJson = jsonFactory.createArrayBuilder().build();
+
+        var dataset = jsonFactory.createObjectBuilder()
+                .add(ID, DATASET_ID)
+                .add(TYPE, DCAT_DATASET_TYPE)
+                .add(ODRL_POLICY_ATTRIBUTE, policyJson)
+                .add(DCAT_DISTRIBUTION_ATTRIBUTE, distributionJson)
+                .build();
+
+        var result = transformer.transform(getExpanded(dataset), context);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(DATASET_ID);
+        assertThat(result.getOffers()).hasSize(1);
+        assertThat(result.getOffers()).containsEntry(policyId, policy);
+        assertThat(result.getDistributions()).isNotNull().isEmpty();
+
+        verify(context, never()).reportProblem(anyString());
+        verify(context, times(1)).transform(isA(JsonObject.class), eq(Policy.class));
+        verify(context, never()).transform(isA(JsonObject.class), eq(Distribution.class));
+    }
+
     private JsonObject getJsonObject(String id, String type) {
         return jsonFactory.createObjectBuilder()
                 .add(ID, id)

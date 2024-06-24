@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, 2021 Microsoft Corporation
+ *  Copyright (c) 2022 Microsoft Corporation
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -19,23 +19,8 @@ plugins {
 }
 
 dependencies {
-
-    implementation(libs.edc.core.controlplane)
-    implementation(libs.edc.core.dataPlane.selector)
-    runtimeOnly(libs.edc.api.observability)
-    runtimeOnly(libs.edc.api.management)
-    runtimeOnly(libs.edc.api.control.config)
-    runtimeOnly(libs.edc.config.filesystem)
-    runtimeOnly(libs.edc.dpf.transfer)
-    runtimeOnly(libs.edc.ext.http)
-    runtimeOnly(libs.edc.spi.jsonld)
-
-    // protocol modules
-    runtimeOnly(libs.edc.dsp.all)
-    runtimeOnly(libs.edc.iam.mock)
-
-    // Embedded DPF
-    runtimeOnly(libs.bundles.edc.dpf)
+    runtimeOnly(project(":launchers:catalog-base"))
+    runtimeOnly(libs.bundles.dcp)
 }
 
 application {
@@ -44,7 +29,7 @@ application {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     mergeServiceFiles()
-    archiveFileName.set("app.jar")
+    archiveFileName.set("fc.jar")
 }
 
 edcBuild {

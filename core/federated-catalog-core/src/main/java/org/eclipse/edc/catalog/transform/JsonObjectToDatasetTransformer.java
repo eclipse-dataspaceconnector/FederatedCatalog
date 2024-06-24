@@ -25,6 +25,8 @@ import org.eclipse.edc.transform.spi.TransformerContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+
 import static jakarta.json.JsonValue.ValueType.ARRAY;
 import static jakarta.json.JsonValue.ValueType.OBJECT;
 import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DCAT_DATASET_TYPE;
@@ -45,6 +47,7 @@ public class JsonObjectToDatasetTransformer extends AbstractJsonLdTransformer<Js
         var builder = Dataset.Builder.newInstance();
 
         builder.id(nodeId(object));
+        builder.distributions(new ArrayList<>());
         visitProperties(object, (key, value) -> transformProperties(key, value, builder, context));
 
         return builderResult(builder::build, context);

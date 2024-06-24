@@ -16,26 +16,26 @@ package org.eclipse.edc.catalog.defaults.store;
 
 
 import org.eclipse.edc.catalog.spi.CatalogConstants;
-import org.eclipse.edc.catalog.store.InMemoryFederatedCacheStore;
+import org.eclipse.edc.catalog.store.InMemoryFederatedCatalogCache;
 import org.eclipse.edc.connector.controlplane.asset.spi.domain.Asset;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.connector.controlplane.catalog.spi.DataService;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Dataset;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Distribution;
 import org.eclipse.edc.query.CriterionOperatorRegistryImpl;
+import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.util.concurrency.LockManager;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class InMemoryFederatedCacheStoreTest {
+class InMemoryFederatedCatalogCacheTest {
 
-    private final InMemoryFederatedCacheStore store = new InMemoryFederatedCacheStore(new LockManager(new ReentrantReadWriteLock()), CriterionOperatorRegistryImpl.ofDefaults());
+    private final InMemoryFederatedCatalogCache store = new InMemoryFederatedCatalogCache(new LockManager(new ReentrantReadWriteLock()), CriterionOperatorRegistryImpl.ofDefaults());
 
     @Test
     void queryCacheContainingOneElementWithNoCriterion_shouldReturnUniqueElement() {
@@ -45,7 +45,7 @@ class InMemoryFederatedCacheStoreTest {
 
         store.save(catalogEntry);
 
-        var result = store.query(Collections.emptyList());
+        var result = store.query(QuerySpec.none());
 
         assertThat(result)
                 .hasSize(1)
@@ -62,7 +62,7 @@ class InMemoryFederatedCacheStoreTest {
         store.save(entry1);
         store.save(entry2);
 
-        var result = store.query(Collections.emptyList());
+        var result = store.query(QuerySpec.none());
 
         assertThat(result)
                 .hasSize(1)
@@ -85,7 +85,7 @@ class InMemoryFederatedCacheStoreTest {
         store.save(entry1);
         store.save(entry2);
 
-        var result = store.query(Collections.emptyList());
+        var result = store.query(QuerySpec.none());
 
         assertThat(result)
                 .hasSize(2)
@@ -105,10 +105,10 @@ class InMemoryFederatedCacheStoreTest {
         store.save(entry1);
         store.save(entry2);
 
-        assertThat(store.query(List.of())).hasSize(2);
+        assertThat(store.query(QuerySpec.none())).hasSize(2);
 
         store.deleteExpired(); // none of them is marked, d
-        assertThat(store.query(List.of())).containsExactlyInAnyOrder(entry1, entry2);
+        assertThat(store.query(QuerySpec.none())).containsExactlyInAnyOrder(entry1, entry2);
 
     }
 
@@ -124,12 +124,12 @@ class InMemoryFederatedCacheStoreTest {
         store.save(entry1);
         store.save(entry2);
 
-        assertThat(store.query(List.of())).hasSize(2);
+        assertThat(store.query(QuerySpec.none())).hasSize(2);
 
         store.expireAll(); // two items marked
         store.save(createCatalog(UUID.randomUUID().toString(), createAsset(UUID.randomUUID().toString())));
         store.deleteExpired(); // should delete only marked items
-        assertThat(store.query(List.of())).hasSize(1)
+        assertThat(store.query(QuerySpec.none())).hasSize(1)
                 .doesNotContain(entry1, entry2);
 
     }

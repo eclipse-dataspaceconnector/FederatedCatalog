@@ -12,4 +12,4 @@
 #
 #
 
-org.eclipse.edc.catalog.api.query.FederatedCatalogCacheQueryApiExtension
+org.eclipse.edc.catalog.api.query.FederatedCatalogApiExtension

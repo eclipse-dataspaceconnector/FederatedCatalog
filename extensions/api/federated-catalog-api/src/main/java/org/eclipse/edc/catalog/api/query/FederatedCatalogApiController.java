@@ -21,41 +21,40 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.eclipse.edc.catalog.spi.QueryEngine;
-import org.eclipse.edc.catalog.spi.QueryResponse;
-import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
+import org.eclipse.edc.catalog.spi.QueryService;
+import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.result.AbstractResult;
 import org.eclipse.edc.spi.result.Result;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
+import org.eclipse.edc.web.spi.exception.InvalidRequestException;
+import org.eclipse.edc.web.spi.exception.ServiceResultHandler;
+
+import javax.xml.catalog.Catalog;
 
 import static jakarta.json.stream.JsonCollectors.toJsonArray;
 
-@Consumes({MediaType.APPLICATION_JSON})
-@Produces({MediaType.APPLICATION_JSON})
-@Path("/federatedcatalog")
+@Consumes({ MediaType.APPLICATION_JSON })
+@Produces({ MediaType.APPLICATION_JSON })
+@Path("/v1alpha/catalog/query")
 public class FederatedCatalogApiController implements FederatedCatalogApi {
 
-    private final QueryEngine queryEngine;
+    private final QueryService queryService;
     private final TypeTransformerRegistry transformerRegistry;
 
-    public FederatedCatalogApiController(QueryEngine queryEngine, TypeTransformerRegistry transformerRegistry) {
-        this.queryEngine = queryEngine;
+    public FederatedCatalogApiController(QueryService queryService, TypeTransformerRegistry transformerRegistry) {
+        this.queryService = queryService;
         this.transformerRegistry = transformerRegistry;
     }
 
     @Override
     @POST
-    public JsonArray getCachedCatalog(FederatedCatalogCacheQuery federatedCatalogCacheQuery) {
-        var queryResponse = queryEngine.getCatalog(federatedCatalogCacheQuery);
-        // query not possible
-        if (queryResponse.getStatus() == QueryResponse.Status.NO_ADAPTER_FOUND) {
-            throw new QueryNotAcceptedException();
-        }
-        if (!queryResponse.getErrors().isEmpty()) {
-            throw new QueryException(queryResponse.getErrors());
-        }
+    public JsonArray getCachedCatalog(JsonObject catalogQuery) {
+        var querySpec = transformerRegistry.transform(catalogQuery, QuerySpec.class)
+                .orElseThrow(InvalidRequestException::new);
+        
+        var catalogs = queryService.getCatalog(querySpec)
+                .orElseThrow(ServiceResultHandler.exceptionMapper(Catalog.class));
 
-        var catalogs = queryResponse.getCatalogs();
         return catalogs.stream().map(c -> transformerRegistry.transform(c, JsonObject.class))
                 .filter(Result::succeeded)
                 .map(AbstractResult::getContent)

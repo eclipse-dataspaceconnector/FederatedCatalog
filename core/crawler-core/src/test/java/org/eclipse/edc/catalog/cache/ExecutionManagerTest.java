@@ -41,7 +41,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class ExecutionManagerTest {
@@ -157,14 +155,7 @@ class ExecutionManagerTest {
     void executePlan_workItemsEmpty() {
         when(nodeDirectoryMock.getAll()).thenReturn(List.of());
         manager.executePlan(simplePlan());
-        var inorder = inOrder(preExecutionTaskMock, monitorMock);
 
-        inorder.verify(monitorMock).info(anyString());
-        inorder.verify(preExecutionTaskMock).run();
-        inorder.verify(monitorMock).info(anyString());
-        inorder.verify(monitorMock).warning(startsWith("No WorkItems found"));
-        inorder.verify(monitorMock).info(anyString());
-        verifyNoMoreInteractions(monitorMock);
         verifyNoInteractions(crawlerActionRegistry);
     }
 

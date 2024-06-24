@@ -26,6 +26,7 @@ dependencies {
     testImplementation(libs.edc.json.ld.lib)
     testImplementation(libs.edc.core.jetty)
     testImplementation(libs.edc.junit)
+    testImplementation(libs.edc.spi.dataplane.selector)
 
     testImplementation(libs.restAssured)
     testImplementation(libs.awaitility)

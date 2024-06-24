@@ -15,6 +15,7 @@
 package org.eclipse.edc.catalog.instrumentation;
 
 import org.eclipse.edc.catalog.spi.CatalogConstants;
+import org.eclipse.edc.connector.dataplane.selector.spi.client.DataPlaneClientFactory;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcher;
@@ -44,5 +45,10 @@ public class MockInjectionExtension implements ServiceExtension {
         }
 
         return dispatcher;
+    }
+
+    @Provider
+    public DataPlaneClientFactory createDataPlaneClientFactory() {
+        return mock();
     }
 }

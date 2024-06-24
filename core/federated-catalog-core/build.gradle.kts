@@ -26,13 +26,14 @@ dependencies {
 
     implementation(libs.edc.lib.util)
     implementation(libs.edc.core.connector)
-    implementation(libs.edc.query.lib)
+    implementation(libs.edc.lib.query)
     implementation(libs.edc.dsp.transform.catalog)
     implementation(libs.edc.controlplane.transform)
     implementation(libs.edc.lib.transform)
     implementation(libs.edc.dsp.api.configuration)
     implementation(libs.edc.spi.jsonld)
     implementation(libs.edc.json.ld.lib)
+    implementation(libs.edc.lib.store)
 
     // required for integration test
     testImplementation(libs.edc.dsp.transform.catalog)

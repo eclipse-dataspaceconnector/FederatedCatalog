@@ -29,6 +29,15 @@ jobs:
       - name: Run Checkstyle
         run: ./gradlew checkstyleMain checkstyleTest checkstyleTestFixtures
 
+  Javadoc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: eclipse-edc/.github/.github/actions/setup-build@main
+
+      - name: Run Javadoc
+        run: ./gradlew javadoc
+
   Unit-Tests:
     runs-on: ubuntu-latest
     env:
@@ -49,14 +58,17 @@ jobs:
       - uses: eclipse-edc/.github/.github/actions/setup-build@main
 
       - name: 'Build launcher'
-        run: ./gradlew :launchers:shadowJar
+        run: ./gradlew shadowJar
 
       - name: 'Build Docker image'
-        run: docker build -t federated-catalog ./launchers
+        run: docker build -t federated-catalog:mocked ./launchers/catalog-mocked
 
       - name: 'Start FCC Container'
         run: |
-          docker run -d --rm --name fcc federated-catalog:latest
+          docker run -d --rm --name fcc \
+            -e "WEB_HTTP_CATALOG_PORT=8183" \
+            -e "WEB_HTTP_CATALOG_PATH=/catalog" \
+            federated-catalog:mocked
 
       - name: 'Wait for Federated Catalog to be healthy'
         uses: raschmitt/wait-for-healthy-container@v1

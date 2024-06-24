@@ -18,7 +18,7 @@ import jakarta.json.Json;
 import org.eclipse.edc.catalog.cache.crawler.CrawlerActionRegistryImpl;
 import org.eclipse.edc.catalog.cache.query.DspCatalogRequestAction;
 import org.eclipse.edc.catalog.spi.CatalogConstants;
-import org.eclipse.edc.catalog.spi.FederatedCacheStore;
+import org.eclipse.edc.catalog.spi.FederatedCatalogCache;
 import org.eclipse.edc.catalog.spi.model.CatalogUpdateResponse;
 import org.eclipse.edc.catalog.transform.JsonObjectToCatalogTransformer;
 import org.eclipse.edc.catalog.transform.JsonObjectToDataServiceTransformer;
@@ -49,6 +49,7 @@ import org.eclipse.edc.spi.system.health.HealthCheckResult;
 import org.eclipse.edc.spi.system.health.HealthCheckService;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
+import org.eclipse.edc.transform.transformer.edc.to.JsonObjectToQuerySpecTransformer;
 import org.eclipse.edc.transform.transformer.edc.to.JsonValueToGenericTypeTransformer;
 
 import java.util.Map;
@@ -65,7 +66,7 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
     public static final String NAME = "Federated Catalog Cache";
 
     @Inject
-    private FederatedCacheStore store;
+    private FederatedCatalogCache store;
     @Inject(required = false)
     private HealthCheckService healthCheckService;
     @Inject
@@ -109,7 +110,7 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
         int numCrawlers = context.getSetting(NUM_CRAWLER_SETTING, DEFAULT_NUMBER_OF_CRAWLERS);
 
         // by default only uses FC nodes that are not "self"
-        nodeFilter = ofNullable(nodeFilter).orElse(node -> !node.name().equals(context.getConnectorId()));
+        nodeFilter = ofNullable(nodeFilter).orElse(node -> !node.name().equals(context.getRuntimeId()));
 
         executionManager = ExecutionManager.Builder.newInstance()
                 .monitor(context.getMonitor().withPrefix("ExecutionManager"))
@@ -148,6 +149,7 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
         transformerRegistry.register(new JsonObjectToDatasetTransformer());
         transformerRegistry.register(new JsonObjectToDataServiceTransformer());
         transformerRegistry.register(new JsonObjectToDistributionTransformer());
+        transformerRegistry.register(new JsonObjectToQuerySpecTransformer());
 
         var jsonFactory = Json.createBuilderFactory(Map.of());
         var mapper = context.getService(TypeManager.class).getMapper(JSON_LD);
@@ -163,7 +165,7 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
     }
 
     /**
-     * inserts a particular {@link Catalog} in the {@link FederatedCacheStore}
+     * inserts a particular {@link Catalog} in the {@link FederatedCatalogCache}
      *
      * @param updateResponse The response that contains the catalog
      */

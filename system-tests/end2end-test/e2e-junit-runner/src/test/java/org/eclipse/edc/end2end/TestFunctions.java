@@ -19,6 +19,7 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import org.eclipse.edc.connector.controlplane.asset.spi.domain.Asset;
+import org.eclipse.edc.spi.query.QuerySpec;
 
 import static org.eclipse.edc.connector.controlplane.asset.spi.domain.Asset.EDC_ASSET_DATA_ADDRESS;
 import static org.eclipse.edc.connector.controlplane.asset.spi.domain.Asset.EDC_ASSET_PROPERTIES;
@@ -60,6 +61,12 @@ public class TestFunctions {
                 .add(CONTRACT_DEFINITION_ACCESSPOLICY_ID, accessPolicyId)
                 .add(CONTRACT_DEFINITION_CONTRACTPOLICY_ID, contractPolicyId)
                 .add(CONTRACT_DEFINITION_ASSETS_SELECTOR, createCriterionBuilder(assetId).build())
+                .build();
+    }
+
+    public static JsonObject createEmptyQuery() {
+        return Json.createObjectBuilder()
+                .add(TYPE, QuerySpec.EDC_QUERY_SPEC_TYPE)
                 .build();
     }
 

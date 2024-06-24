@@ -15,33 +15,33 @@
 package org.eclipse.edc.catalog.store;
 
 import org.eclipse.edc.catalog.spi.CatalogConstants;
-import org.eclipse.edc.catalog.spi.FederatedCacheStore;
+import org.eclipse.edc.catalog.spi.FederatedCatalogCache;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
-import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.query.CriterionOperatorRegistry;
+import org.eclipse.edc.spi.query.QueryResolver;
+import org.eclipse.edc.spi.query.QuerySpec;
+import org.eclipse.edc.store.ReflectionBasedQueryResolver;
 import org.eclipse.edc.util.concurrency.LockManager;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
 /**
  * An ephemeral in-memory cache store.
  */
-public class InMemoryFederatedCacheStore implements FederatedCacheStore {
+public class InMemoryFederatedCatalogCache implements FederatedCatalogCache {
 
     private final Map<String, MarkableEntry<Catalog>> cache = new ConcurrentHashMap<>();
-    private final CriterionOperatorRegistry criterionOperatorRegistry;
     private final LockManager lockManager;
+    private final QueryResolver<Catalog> queryResolver;
 
-    public InMemoryFederatedCacheStore(LockManager lockManager, CriterionOperatorRegistry criterionOperatorRegistry) {
-        this.criterionOperatorRegistry = criterionOperatorRegistry;
+
+    public InMemoryFederatedCatalogCache(LockManager lockManager, CriterionOperatorRegistry criterionOperatorRegistry) {
         this.lockManager = lockManager;
+        queryResolver = new ReflectionBasedQueryResolver<>(Catalog.class, criterionOperatorRegistry);
     }
 
     @Override
@@ -55,12 +55,9 @@ public class InMemoryFederatedCacheStore implements FederatedCacheStore {
     }
 
     @Override
-    public Collection<Catalog> query(List<Criterion> query) {
-        //AND all predicates
-        var rootPredicate = query.stream()
-                .map(criterionOperatorRegistry::toPredicate)
-                .reduce(x -> true, Predicate::and);
-        return lockManager.readLock(() -> cache.values().stream().map(MarkableEntry::getEntry).filter(rootPredicate).collect(Collectors.toList()));
+    public Collection<Catalog> query(QuerySpec query) {
+        var catalogs = cache.values().stream().map(me -> me.entry);
+        return lockManager.readLock(() -> queryResolver.query(catalogs, query)).toList();
     }
 
     @Override

@@ -23,18 +23,17 @@ import io.restassured.specification.RequestSpecification;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import org.eclipse.edc.catalog.spi.CatalogConstants;
-import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.connector.controlplane.catalog.spi.DataService;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Dataset;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Distribution;
-import org.eclipse.edc.connector.controlplane.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.crawler.spi.TargetNode;
 import org.eclipse.edc.crawler.spi.TargetNodeDirectory;
 import org.eclipse.edc.jsonld.TitaniumJsonLd;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
+import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.response.StatusResult;
 import org.eclipse.edc.spi.result.Result;
 
@@ -52,13 +51,14 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.edc.jsonld.spi.JsonLdKeywords.TYPE;
 import static org.eclipse.edc.util.io.Ports.getFreePort;
 import static org.mockito.Mockito.mock;
 
 public class TestFunctions {
-    public static final String BASE_PATH = "/api";
-    public static final int PORT = getFreePort();
-    private static final String PATH = "/federatedcatalog";
+    public static final String CATALOG_QUERY_BASE_PATH = "/catalog";
+    public static final int CATALOG_QUERY_PORT = getFreePort();
+    private static final String PATH = "/v1alpha/catalog/query";
     private static final TypeReference<List<Map<String, Object>>> MAP_TYPE = new TypeReference<>() {
     };
 
@@ -66,8 +66,8 @@ public class TestFunctions {
 
     private static RequestSpecification baseRequest() {
         return given()
-                .baseUri("http://localhost:" + PORT)
-                .basePath(BASE_PATH)
+                .baseUri("http://localhost:" + CATALOG_QUERY_PORT)
+                .basePath(CATALOG_QUERY_BASE_PATH)
                 .contentType(ContentType.JSON)
                 .when();
     }
@@ -100,14 +100,6 @@ public class TestFunctions {
                 .build()));
     }
 
-    public static ContractOffer createOffer(String id) {
-        return ContractOffer.Builder.newInstance()
-                .id(id)
-                .assetId(id)
-                .policy(Policy.Builder.newInstance().build())
-                .build();
-    }
-
     public static void insertSingle(TargetNodeDirectory directory) {
         directory.insert(new TargetNode("test-node", "did:web:" + UUID.randomUUID(), "http://test-node.com", singletonList(CatalogConstants.DATASPACE_PROTOCOL)));
     }
@@ -116,7 +108,7 @@ public class TestFunctions {
         var objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         var body = baseRequest()
-                .body(FederatedCatalogCacheQuery.Builder.newInstance().build())
+                .body(TestFunctions.createEmptyQuery())
                 .post(PATH)
                 .body();
 
@@ -137,6 +129,12 @@ public class TestFunctions {
                 .offer("test-offer", Policy.Builder.newInstance().build())
                 .distribution(Distribution.Builder.newInstance().format("test-format").dataService(DataService.Builder.newInstance().build()).build())
                 .id(dataset1)
+                .build();
+    }
+
+    public static JsonObject createEmptyQuery() {
+        return Json.createObjectBuilder()
+                .add(TYPE, QuerySpec.EDC_QUERY_SPEC_TYPE)
                 .build();
     }
 }

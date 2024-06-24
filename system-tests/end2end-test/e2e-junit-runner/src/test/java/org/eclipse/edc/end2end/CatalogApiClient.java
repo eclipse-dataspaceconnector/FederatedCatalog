@@ -23,7 +23,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.eclipse.edc.catalog.spi.model.FederatedCatalogCacheQuery;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.jsonld.spi.JsonLd;
 import org.eclipse.edc.spi.result.Result;
@@ -36,7 +35,7 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-class ManagementApiClient {
+class CatalogApiClient {
     private static final TypeReference<List<Map<String, Object>>> LIST_TYPE_REFERENCE = new TypeReference<>() {
     };
     private static final MediaType JSON = MediaType.parse("application/json");
@@ -46,9 +45,9 @@ class ManagementApiClient {
     private final JsonLd jsonLdService;
     private final TypeTransformerRegistry typeTransformerRegistry;
 
-    ManagementApiClient(Endpoint catalogManagement, Endpoint connectorManagement,
-                        ObjectMapper mapper, JsonLd jsonLdService,
-                        TypeTransformerRegistry typeTransformerRegistry) {
+    CatalogApiClient(Endpoint catalogManagement, Endpoint connectorManagement,
+                     ObjectMapper mapper, JsonLd jsonLdService,
+                     TypeTransformerRegistry typeTransformerRegistry) {
         this.mapper = mapper;
         this.jsonLdService = jsonLdService;
         this.typeTransformerRegistry = typeTransformerRegistry;
@@ -61,15 +60,15 @@ class ManagementApiClient {
     }
 
     Result<String> postPolicy(String policyJsonLd) {
-        return postObjectWithId(createPostRequest(policyJsonLd, managementBaseUrl + "/v2/policydefinitions"));
+        return postObjectWithId(createPostRequest(policyJsonLd, managementBaseUrl + "/v3/policydefinitions"));
     }
 
     Result<String> postContractDefinition(JsonObject definition) {
-        return postObjectWithId(createPostRequest(definition, managementBaseUrl + "/v2/contractdefinitions"));
+        return postObjectWithId(createPostRequest(definition, managementBaseUrl + "/v3/contractdefinitions"));
     }
 
     List<Catalog> getContractOffers() {
-        var rq = createPostRequest(FederatedCatalogCacheQuery.Builder.newInstance().build(), catalog("/federatedcatalog"));
+        var rq = createPostRequest(TestFunctions.createEmptyQuery(), catalog("/v1alpha/catalog/query"));
 
         try (var response = getClient().newCall(rq).execute()) {
             if (response.isSuccessful()) {
@@ -117,8 +116,8 @@ class ManagementApiClient {
     }
 
     @NotNull
-    private Request createPostRequest(Object object, String path) {
-        return new Request.Builder().url(path).post(RequestBody.create(asJson(object), JSON)).build();
+    private Request createPostRequest(Object body, String path) {
+        return new Request.Builder().url(path).post(RequestBody.create(asJson(body), JSON)).build();
     }
 
     private String asJson(Object entry) {

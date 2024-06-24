@@ -64,14 +64,8 @@ public class ExecutionManager {
 
     public void executePlan(ExecutionPlan plan) {
         plan.run(() -> {
-
-            monitor.info("Run pre-execution task");
             runPreExecution();
-
-            monitor.info("Run execution");
             doWork();
-
-            monitor.info("Run post-execution task");
             runPostExecution();
         });
 
@@ -81,7 +75,7 @@ public class ExecutionManager {
         // load work items from directory
         var workItems = fetchWorkItems();
         if (workItems.isEmpty()) {
-            monitor.warning("No WorkItems found, aborting execution");
+            monitor.debug("No WorkItems found, skipping execution");
             return;
         }
         monitor.debug("Loaded " + workItems.size() + " work items from storage");
@@ -104,7 +98,7 @@ public class ExecutionManager {
 
             var item = allItems.poll();
             if (item == null) {
-                monitor.warning("WorkItem queue empty, abort execution");
+                monitor.debug("WorkItem queue empty, skip execution");
                 break;
             }
 
@@ -116,9 +110,9 @@ public class ExecutionManager {
                 crawler.run(item, adapter.get())
                         .whenComplete((updateResponse, throwable) -> {
                             if (throwable != null) {
-                                monitor.severe(format("Unexpected exception happened during in crawler %s", crawler.getId()), throwable);
+                                monitor.severe(format("Unexpected exception occurred during in crawler %s", crawler.getId()), throwable);
                             } else {
-                                monitor.info(format("Crawler [%s] is done", crawler.getId()));
+                                monitor.debug(format("Crawler [%s] is done", crawler.getId()));
                             }
                             availableCrawlers.add(crawler);
                         });
@@ -140,6 +134,7 @@ public class ExecutionManager {
     private void runPostExecution() {
         if (postExecutionTask != null) {
             try {
+                monitor.debug("Run post-execution task");
                 postExecutionTask.run();
             } catch (Throwable thr) {
                 monitor.severe("Error running post execution task", thr);
@@ -150,6 +145,7 @@ public class ExecutionManager {
     private void runPreExecution() {
         if (preExecutionTask != null) {
             try {
+                monitor.debug("Run pre-execution task");
                 preExecutionTask.run();
             } catch (Throwable thr) {
                 monitor.severe("Error running pre execution task", thr);
@@ -201,6 +197,10 @@ public class ExecutionManager {
             instance = new ExecutionManager();
         }
 
+        public static Builder newInstance() {
+            return new Builder();
+        }
+
         public Builder monitor(Monitor monitor) {
             instance.monitor = monitor;
             return this;
@@ -246,10 +246,6 @@ public class ExecutionManager {
             Objects.requireNonNull(instance.crawlerActionRegistry, "ExecutionManager.Builder: nodeQueryAdapterRegistry cannot be null");
             Objects.requireNonNull(instance.directory, "ExecutionManager.Builder: nodeDirectory cannot be null");
             return instance;
-        }
-
-        public static Builder newInstance() {
-            return new Builder();
         }
     }
 }

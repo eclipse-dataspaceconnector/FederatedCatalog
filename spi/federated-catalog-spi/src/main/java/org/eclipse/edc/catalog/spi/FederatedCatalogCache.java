@@ -16,16 +16,15 @@ package org.eclipse.edc.catalog.spi;
 
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.runtime.metamodel.annotation.ExtensionPoint;
-import org.eclipse.edc.spi.query.Criterion;
+import org.eclipse.edc.spi.query.QuerySpec;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Internal datastore where all the catalogs from all the other connectors are stored by the FederatedCatalogCache.
  */
 @ExtensionPoint
-public interface FederatedCacheStore {
+public interface FederatedCatalogCache {
 
     /**
      * Adds an {@code ContractOffer} to the store
@@ -38,7 +37,7 @@ public interface FederatedCacheStore {
      * @param query A list of criteria the asset must fulfill
      * @return A collection of assets that are already in the store and that satisfy a given list of criteria.
      */
-    Collection<Catalog> query(List<Criterion> query);
+    Collection<Catalog> query(QuerySpec query);
 
     /**
      * Deletes all entries from the cache that are marked as "expired"

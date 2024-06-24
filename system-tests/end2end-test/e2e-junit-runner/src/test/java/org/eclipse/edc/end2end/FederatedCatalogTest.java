@@ -30,7 +30,10 @@ import org.eclipse.edc.crawler.spi.TargetNodeDirectory;
 import org.eclipse.edc.jsonld.TitaniumJsonLd;
 import org.eclipse.edc.jsonld.util.JacksonJsonLd;
 import org.eclipse.edc.junit.annotations.EndToEndTest;
-import org.eclipse.edc.junit.extensions.EdcRuntimeExtension;
+import org.eclipse.edc.junit.extensions.EmbeddedRuntime;
+import org.eclipse.edc.junit.extensions.RuntimeExtension;
+import org.eclipse.edc.junit.extensions.RuntimePerClassExtension;
+import org.eclipse.edc.junit.extensions.RuntimePerMethodExtension;
 import org.eclipse.edc.protocol.dsp.catalog.transform.from.JsonObjectFromCatalogTransformer;
 import org.eclipse.edc.protocol.dsp.catalog.transform.from.JsonObjectFromDataServiceTransformer;
 import org.eclipse.edc.protocol.dsp.catalog.transform.from.JsonObjectFromDatasetTransformer;
@@ -68,14 +71,15 @@ class FederatedCatalogTest {
     private static final Endpoint CONNECTOR_MANAGEMENT = new Endpoint("/management", "8081");
     private static final Endpoint CONNECTOR_PROTOCOL = new Endpoint("/api/v1/dsp", "8082");
     private static final Endpoint CONNECTOR_DEFAULT = new Endpoint("/api/v1/", "8080");
-    private static final Endpoint CONNECTOR_CONTROL = new Endpoint("/api/v1/control", "8093");
+    private static final Endpoint CONNECTOR_CONTROL = new Endpoint("/api/v1/control", "8083");
 
     private static final Endpoint CATALOG_MANAGEMENT = new Endpoint("/management", "8091");
     private static final Endpoint CATALOG_PROTOCOL = new Endpoint("/api/v1/dsp", "8092");
     private static final Endpoint CATALOG_DEFAULT = new Endpoint("/api/v1/", "8090");
+    private static final Endpoint CATALOG_CATALOG = new Endpoint("/catalog", "8093");
 
     @RegisterExtension
-    static EdcRuntimeExtension connector = new EdcRuntimeExtension(":system-tests:end2end-test:connector-runtime", "connector",
+    static RuntimeExtension connector = new RuntimePerClassExtension(new EmbeddedRuntime("connector",
             configOf("edc.connector.name", "connector1",
                     "edc.web.rest.cors.enabled", "true",
                     "web.http.port", CONNECTOR_DEFAULT.port(),
@@ -88,10 +92,11 @@ class FederatedCatalogTest {
                     "edc.participant.id", "test-connector",
                     "web.http.management.path", CONNECTOR_MANAGEMENT.path(),
                     "edc.web.rest.cors.headers", "origin,content-type,accept,authorization,x-api-key",
-                    "edc.dsp.callback.address", "http://localhost:%s%s".formatted(CONNECTOR_PROTOCOL.port(), CONNECTOR_PROTOCOL.path())));
+                    "edc.dsp.callback.address", "http://localhost:%s%s".formatted(CONNECTOR_PROTOCOL.port(), CONNECTOR_PROTOCOL.path())),
+            ":system-tests:end2end-test:connector-runtime"));
 
     @RegisterExtension
-    static EdcRuntimeExtension catalog = new EdcRuntimeExtension(":system-tests:end2end-test:catalog-runtime", "catalog",
+    static RuntimeExtension catalog = new RuntimePerMethodExtension(new EmbeddedRuntime("catalog",
             configOf("edc.catalog.cache.execution.delay.seconds", "0",
                     "edc.catalog.cache.execution.period.seconds", "2",
                     "edc.catalog.cache.partition.num.crawlers", "5",
@@ -103,10 +108,13 @@ class FederatedCatalogTest {
                     "web.http.protocol.path", CATALOG_PROTOCOL.path(),
                     "web.http.management.port", CATALOG_MANAGEMENT.port(),
                     "web.http.management.path", CATALOG_MANAGEMENT.path(),
-                    "edc.web.rest.cors.headers", "origin,content-type,accept,authorization,x-api-key"));
+                    "web.http.catalog.port", CATALOG_CATALOG.port(),
+                    "web.http.catalog.path", CATALOG_CATALOG.path(),
+                    "edc.web.rest.cors.headers", "origin,content-type,accept,authorization,x-api-key"),
+            ":system-tests:end2end-test:catalog-runtime"));
     private final TypeTransformerRegistry typeTransformerRegistry = new TypeTransformerRegistryImpl();
     private final ObjectMapper mapper = JacksonJsonLd.createObjectMapper();
-    private final ManagementApiClient apiClient = new ManagementApiClient(CATALOG_MANAGEMENT, CONNECTOR_MANAGEMENT, mapper, new TitaniumJsonLd(mock(Monitor.class)), typeTransformerRegistry);
+    private final CatalogApiClient apiClient = new CatalogApiClient(CATALOG_CATALOG, CONNECTOR_MANAGEMENT, mapper, new TitaniumJsonLd(mock(Monitor.class)), typeTransformerRegistry);
 
     private static Map<String, String> configOf(String... keyValuePairs) {
         if (keyValuePairs.length % 2 != 0) {
@@ -174,13 +182,11 @@ class FederatedCatalogTest {
                     var catalogs = apiClient.getContractOffers();
 
                     assertThat(catalogs).hasSizeGreaterThanOrEqualTo(1);
-                    assertThat(catalogs).anySatisfy(catalog -> {
-                        assertThat(catalog.getDatasets())
-                                .anySatisfy(dataset -> {
-                                    assertThat(dataset.getOffers()).hasSizeGreaterThanOrEqualTo(1);
-                                    assertThat(dataset.getOffers().keySet()).anyMatch(key -> key.contains(assetIdBase64));
-                                });
-                    });
+                    assertThat(catalogs).anySatisfy(catalog -> assertThat(catalog.getDatasets())
+                            .anySatisfy(dataset -> {
+                                assertThat(dataset.getOffers()).hasSizeGreaterThanOrEqualTo(1);
+                                assertThat(dataset.getOffers().keySet()).anyMatch(key -> key.contains(assetIdBase64));
+                            }));
 
                 });
     }

@@ -14,14 +14,11 @@
 
 package org.eclipse.edc.catalog.cache;
 
-import org.eclipse.edc.catalog.cache.query.CacheQueryAdapterImpl;
-import org.eclipse.edc.catalog.cache.query.CacheQueryAdapterRegistryImpl;
-import org.eclipse.edc.catalog.cache.query.QueryEngineImpl;
+import org.eclipse.edc.catalog.cache.query.QueryServiceImpl;
 import org.eclipse.edc.catalog.directory.InMemoryNodeDirectory;
-import org.eclipse.edc.catalog.spi.CacheQueryAdapterRegistry;
-import org.eclipse.edc.catalog.spi.FederatedCacheStore;
-import org.eclipse.edc.catalog.spi.QueryEngine;
-import org.eclipse.edc.catalog.store.InMemoryFederatedCacheStore;
+import org.eclipse.edc.catalog.spi.FederatedCatalogCache;
+import org.eclipse.edc.catalog.spi.QueryService;
+import org.eclipse.edc.catalog.store.InMemoryFederatedCatalogCache;
 import org.eclipse.edc.crawler.spi.TargetNodeDirectory;
 import org.eclipse.edc.crawler.spi.model.ExecutionPlan;
 import org.eclipse.edc.crawler.spi.model.RecurringExecutionPlan;
@@ -58,9 +55,7 @@ public class FederatedCatalogDefaultServicesExtension implements ServiceExtensio
     public static final String EXECUTION_PLAN_DELAY_SECONDS = "edc.catalog.cache.execution.delay.seconds";
 
     @Inject
-    private FederatedCacheStore store;
-
-    private CacheQueryAdapterRegistry registry;
+    private FederatedCatalogCache store;
 
     @Override
     public String name() {
@@ -68,8 +63,8 @@ public class FederatedCatalogDefaultServicesExtension implements ServiceExtensio
     }
 
     @Provider(isDefault = true)
-    public FederatedCacheStore defaultCacheStore() {
-        return new InMemoryFederatedCacheStore(new LockManager(new ReentrantReadWriteLock()), CriterionOperatorRegistryImpl.ofDefaults());
+    public FederatedCatalogCache defaultCacheStore() {
+        return new InMemoryFederatedCatalogCache(new LockManager(new ReentrantReadWriteLock()), CriterionOperatorRegistryImpl.ofDefaults());
     }
 
     @Provider(isDefault = true)
@@ -78,17 +73,8 @@ public class FederatedCatalogDefaultServicesExtension implements ServiceExtensio
     }
 
     @Provider
-    public QueryEngine defaultQueryEngine() {
-        return new QueryEngineImpl(getCacheQueryAdapterRegistry());
-    }
-
-    @Provider
-    public CacheQueryAdapterRegistry getCacheQueryAdapterRegistry() {
-        if (registry == null) {
-            registry = new CacheQueryAdapterRegistryImpl();
-            registry.register(new CacheQueryAdapterImpl(store));
-        }
-        return registry;
+    public QueryService defaultQueryEngine() {
+        return new QueryServiceImpl(store);
     }
 
     @Provider
