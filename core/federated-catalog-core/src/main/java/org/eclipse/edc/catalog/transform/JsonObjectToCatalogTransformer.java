@@ -19,14 +19,18 @@ import jakarta.json.JsonValue;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.connector.controlplane.catalog.spi.DataService;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Dataset;
+import org.eclipse.edc.connector.controlplane.catalog.spi.Distribution;
 import org.eclipse.edc.jsonld.spi.transformer.AbstractJsonLdTransformer;
 import org.eclipse.edc.transform.spi.TransformerContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DCAT_CATALOG_TYPE;
 import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DCAT_DATASET_ATTRIBUTE;
 import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DCAT_DATA_SERVICE_ATTRIBUTE;
+import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DCAT_DISTRIBUTION_TYPE;
 import static org.eclipse.edc.jsonld.spi.PropertyAndTypeNames.DSPACE_PROPERTY_PARTICIPANT_ID;
+import static org.eclipse.edc.jsonld.spi.TypeUtil.nodeType;
 
 /**
  * Converts from a DCAT catalog as a {@link JsonObject} in JSON-LD expanded form to a {@link Catalog}.
@@ -47,13 +51,26 @@ public class JsonObjectToCatalogTransformer extends AbstractJsonLdTransformer<Js
         return builderResult(builder::build, context);
     }
 
+    private @Nullable Dataset transformDataset(JsonValue datasetJsonObj, TransformerContext context) {
+        var clazz = DCAT_CATALOG_TYPE.equals(nodeType(datasetJsonObj.asJsonObject())) ? Catalog.class : Dataset.class;
+        return context.transform(datasetJsonObj.asJsonObject(), clazz);
+    }
+
     private void transformProperties(String key, JsonValue value, Catalog.Builder builder, TransformerContext context) {
-        if (DCAT_DATASET_ATTRIBUTE.equals(key)) {
-            transformArrayOrObject(value, Dataset.class, builder::dataset, context);
-        } else if (DCAT_DATA_SERVICE_ATTRIBUTE.equals(key)) {
+        if (DCAT_DATASET_ATTRIBUTE.equalsIgnoreCase(key)) {
+            if (value.getValueType().equals(JsonValue.ValueType.ARRAY)) {
+                value.asJsonArray().stream()
+                        .map(jv -> transformDataset(jv, context))
+                        .forEach(builder::dataset);
+            } else {
+                builder.dataset(transformDataset(value, context));
+            }
+        } else if (DCAT_DATA_SERVICE_ATTRIBUTE.equalsIgnoreCase(key)) {
             transformArrayOrObject(value, DataService.class, builder::dataService, context);
-        } else if (DSPACE_PROPERTY_PARTICIPANT_ID.equals(key)) {
+        } else if (DSPACE_PROPERTY_PARTICIPANT_ID.equalsIgnoreCase(key)) {
             builder.participantId(transformString(value, context));
+        } else if (DCAT_DISTRIBUTION_TYPE.equalsIgnoreCase(key)) {
+            transformArrayOrObject(value, Distribution.class, builder::distribution, context);
         } else {
             builder.property(key, transformGenericProperty(value, context));
         }

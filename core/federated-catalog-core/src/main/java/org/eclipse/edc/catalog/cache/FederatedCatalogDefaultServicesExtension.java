@@ -77,7 +77,7 @@ public class FederatedCatalogDefaultServicesExtension implements ServiceExtensio
         return new QueryServiceImpl(store);
     }
 
-    @Provider
+    @Provider(isDefault = true)
     public ExecutionPlan createRecurringExecutionPlan(ServiceExtensionContext context) {
         var periodSeconds = context.getSetting(EXECUTION_PLAN_PERIOD_SECONDS, DEFAULT_EXECUTION_PERIOD_SECONDS);
         var setting = context.getSetting(EXECUTION_PLAN_DELAY_SECONDS, null);

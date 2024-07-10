@@ -32,28 +32,27 @@ import org.eclipse.edc.spi.result.Failure;
 import org.eclipse.edc.transform.spi.TypeTransformerRegistry;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.eclipse.edc.federatedcatalog.util.FederatedCatalogUtil.copy;
+import static org.eclipse.edc.federatedcatalog.util.FederatedCatalogUtil.merge;
 
 /**
  * Helper class that runs through a loop and sends {@link CatalogRequestMessage}s until no more {@link ContractOffer}s are
  * received. This is useful to avoid overloading the provider connector by chunking the resulting response payload
  * size.
  */
-public class BatchedCatalogRequestFetcher {
+public class PagingCatalogFetcher {
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final Monitor monitor;
     private final ObjectMapper objectMapper;
     private final TypeTransformerRegistry transformerRegistry;
     private final JsonLd jsonLdService;
 
-    public BatchedCatalogRequestFetcher(RemoteMessageDispatcherRegistry dispatcherRegistry, Monitor monitor, ObjectMapper objectMapper, TypeTransformerRegistry transformerRegistry, JsonLd jsonLdService) {
+    public PagingCatalogFetcher(RemoteMessageDispatcherRegistry dispatcherRegistry, Monitor monitor, ObjectMapper objectMapper, TypeTransformerRegistry transformerRegistry, JsonLd jsonLdService) {
         this.dispatcherRegistry = dispatcherRegistry;
         this.monitor = monitor;
         this.objectMapper = objectMapper;
@@ -80,28 +79,20 @@ public class BatchedCatalogRequestFetcher {
 
         return dispatcherRegistry.dispatch(byte[].class, rq)
                 .thenCompose(this::readCatalogFrom)
-                .thenCompose(catalog -> completedFuture(copyCatalogWithoutNulls(catalog)))
+                .thenApply(catalog -> copy(catalog).build())
                 .thenCompose(catalog -> {
 
                     var datasets = catalog.getDatasets();
                     if (datasets.size() >= batchSize) {
                         monitor.debug(format("Fetching next batch from %s to %s", from, from + batchSize));
                         return fetch(rq, range.getFrom() + batchSize, batchSize)
-                                .thenApply(o -> concat(catalog, o));
+                                .thenApply(catalogChunk -> merge(catalog, catalogChunk));
                     } else {
                         return completedFuture(catalog);
                     }
                 });
     }
 
-    private Catalog copyCatalogWithoutNulls(Catalog catalog) {
-        return Catalog.Builder.newInstance().id(catalog.getId())
-                .participantId(catalog.getParticipantId())
-                .properties(ofNullable(catalog.getProperties()).orElseGet(HashMap::new))
-                .dataServices(ofNullable(catalog.getDataServices()).orElseGet(ArrayList::new))
-                .datasets(ofNullable(catalog.getDatasets()).orElseGet(ArrayList::new))
-                .build();
-    }
 
     private CompletableFuture<Catalog> readCatalogFrom(StatusResult<byte[]> bytes) {
         if (bytes.failed()) {
@@ -125,13 +116,4 @@ public class BatchedCatalogRequestFetcher {
                 .counterPartyAddress(catalogRequest.getCounterPartyAddress())
                 .counterPartyId(catalogRequest.getCounterPartyId());
     }
-
-
-    private Catalog concat(Catalog target, Catalog source) {
-        target.getDatasets().addAll(source.getDatasets());
-        target.getDataServices().addAll(source.getDataServices());
-        target.getProperties().putAll(source.getProperties());
-        return target;
-    }
-
 }

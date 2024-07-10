@@ -5,6 +5,7 @@ include(":spi:federated-catalog-spi")
 
 include(":core:crawler-core")
 include(":core:federated-catalog-core")
+include(":core:common:lib:catalog-util-lib")
 
 include(":extensions:api:federated-catalog-api")
 include(":launchers:catalog-base")

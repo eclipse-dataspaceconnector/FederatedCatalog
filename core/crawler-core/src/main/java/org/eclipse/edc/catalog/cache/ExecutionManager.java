@@ -57,12 +57,17 @@ public class ExecutionManager {
     private int numCrawlers = 1;
     private CrawlerActionRegistry crawlerActionRegistry;
     private CrawlerSuccessHandler successHandler;
+    private boolean enabled = true;
 
     private ExecutionManager() {
         nodeFilter = n -> true;
     }
 
     public void executePlan(ExecutionPlan plan) {
+        if (!enabled) {
+            monitor.warning("Execution of crawlers is globally disabled.");
+            return;
+        }
         plan.run(() -> {
             runPreExecution();
             doWork();
@@ -213,6 +218,11 @@ public class ExecutionManager {
 
         public Builder numCrawlers(int numCrawlers) {
             instance.numCrawlers = numCrawlers;
+            return this;
+        }
+
+        public Builder isEnabled(boolean isEnabled) {
+            instance.enabled = isEnabled;
             return this;
         }
 

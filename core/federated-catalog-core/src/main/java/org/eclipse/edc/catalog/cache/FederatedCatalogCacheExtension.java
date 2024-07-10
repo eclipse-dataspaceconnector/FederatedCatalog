@@ -41,6 +41,7 @@ import org.eclipse.edc.protocol.dsp.catalog.transform.from.JsonObjectFromDistrib
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provider;
+import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtension;
@@ -64,6 +65,9 @@ import static org.eclipse.edc.spi.constants.CoreConstants.JSON_LD;
 public class FederatedCatalogCacheExtension implements ServiceExtension {
 
     public static final String NAME = "Federated Catalog Cache";
+
+    @Setting
+    public static final String CRAWLING_ENABLED_PROPERTY = "edc.catalog.cache.execution.enabled";
 
     @Inject
     private FederatedCatalogCache store;
@@ -112,6 +116,8 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
         // by default only uses FC nodes that are not "self"
         nodeFilter = ofNullable(nodeFilter).orElse(node -> !node.name().equals(context.getRuntimeId()));
 
+        var isEnabled = context.getConfig().getBoolean(CRAWLING_ENABLED_PROPERTY, true);
+
         executionManager = ExecutionManager.Builder.newInstance()
                 .monitor(context.getMonitor().withPrefix("ExecutionManager"))
                 .preExecutionTask(() -> {
@@ -123,6 +129,7 @@ public class FederatedCatalogCacheExtension implements ServiceExtension {
                 .onSuccess(this::persist)
                 .nodeDirectory(directory)
                 .nodeFilterFunction(nodeFilter)
+                .isEnabled(isEnabled)
                 .build();
 
         registerTransformers(context);

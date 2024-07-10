@@ -20,9 +20,11 @@ plugins {
 dependencies {
     api(libs.edc.spi.core)
     api(libs.edc.spi.web)
+    api(libs.edc.spi.catalog)
     api(libs.edc.spi.dsp)
     api(project(":core:crawler-core"))
     api(project(":spi:federated-catalog-spi"))
+    implementation(project(":core:common:lib:catalog-util-lib"))
 
     implementation(libs.edc.lib.util)
     implementation(libs.edc.core.connector)

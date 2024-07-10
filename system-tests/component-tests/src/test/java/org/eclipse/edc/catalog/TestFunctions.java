@@ -93,10 +93,10 @@ public class TestFunctions {
         return completedFuture(transformationFunction.apply(catalogBuilder().id(catId).datasets(asList(datasets)).build()));
     }
 
-    public static CompletableFuture<StatusResult<byte[]>> randomCatalog(Function<Catalog, StatusResult<byte[]>> transformationFunction, String id, int howMany) {
+    public static CompletableFuture<StatusResult<byte[]>> randomCatalog(Function<Catalog, StatusResult<byte[]>> transformationFunction, String id, int howManyDatasets) {
         return completedFuture(transformationFunction.apply(catalogBuilder()
                 .id(id)
-                .datasets(IntStream.range(0, howMany).mapToObj(i -> createDataset("DataSet_" + UUID.randomUUID())).collect(toList()))
+                .datasets(IntStream.range(0, howManyDatasets).mapToObj(i -> createDataset("DataSet_" + UUID.randomUUID())).collect(toList()))
                 .build()));
     }
 

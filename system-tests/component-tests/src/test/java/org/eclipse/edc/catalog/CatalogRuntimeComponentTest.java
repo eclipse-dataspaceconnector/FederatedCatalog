@@ -28,6 +28,7 @@ import org.eclipse.edc.junit.annotations.ComponentTest;
 import org.eclipse.edc.junit.extensions.EmbeddedRuntime;
 import org.eclipse.edc.junit.extensions.RuntimeExtension;
 import org.eclipse.edc.junit.extensions.RuntimePerMethodExtension;
+import org.eclipse.edc.junit.testfixtures.TestUtils;
 import org.eclipse.edc.protocol.dsp.http.spi.dispatcher.DspHttpRemoteMessageDispatcher;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.response.StatusResult;
@@ -137,6 +138,28 @@ public class CatalogRuntimeComponentTest {
                 .untilAsserted(() -> {
                     var catalogs = queryCatalogApi(jsonObject -> ttr.transform(jsonObject, Catalog.class).orElseThrow(AssertionError::new));
                     assertThat(catalogs).allSatisfy(c -> assertThat(c.getDatasets()).hasSize(5));
+                });
+    }
+
+    @Test
+    @DisplayName("Crawl a single target, returns a catalog of catalogs")
+    void crawlSingle_withCatalogOfCatalogs(RemoteMessageDispatcherRegistry reg, TypeTransformerRegistry ttr, TargetNodeDirectory directory) {
+        // prepare node directory
+        insertSingle(directory);
+        // intercept request egress
+        reg.register(dispatcher);
+        when(dispatcher.dispatch(eq(byte[].class), isA(CatalogRequestMessage.class)))
+                .thenReturn(randomCatalog(catalog -> StatusResult.success(TestUtils.getResourceFileContentAsString("catalog_of_catalogs.json").getBytes()), "root-catalog-id", 5))
+                .thenReturn(randomCatalog(catalog -> StatusResult.success(TestUtils.getResourceFileContentAsString("catalog.json").getBytes()), "sub-catalog-id", 5));
+
+        await().pollDelay(ofSeconds(1))
+                .atMost(TEST_TIMEOUT)
+                .untilAsserted(() -> {
+                    var catalogs = queryCatalogApi(jsonObject -> ttr.transform(jsonObject, Catalog.class).orElseThrow(AssertionError::new));
+                    assertThat(catalogs).isNotEmpty().allSatisfy(c -> {
+                        assertThat(c.getDatasets()).hasSize(2);
+                        assertThat(c.getDatasets()).anySatisfy(ds -> assertThat(ds).isInstanceOf(Catalog.class));
+                    });
                 });
     }
 

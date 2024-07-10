@@ -17,11 +17,14 @@ package org.eclipse.edc.catalog.api.query;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.edc.catalog.spi.QueryService;
+import org.eclipse.edc.federatedcatalog.util.FederatedCatalogUtil;
 import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.result.AbstractResult;
 import org.eclipse.edc.spi.result.Result;
@@ -48,14 +51,17 @@ public class FederatedCatalogApiController implements FederatedCatalogApi {
 
     @Override
     @POST
-    public JsonArray getCachedCatalog(JsonObject catalogQuery) {
+    public JsonArray getCachedCatalog(JsonObject catalogQuery, @DefaultValue("false") @QueryParam("flatten") boolean flatten) {
         var querySpec = transformerRegistry.transform(catalogQuery, QuerySpec.class)
                 .orElseThrow(InvalidRequestException::new);
-        
+
         var catalogs = queryService.getCatalog(querySpec)
                 .orElseThrow(ServiceResultHandler.exceptionMapper(Catalog.class));
 
-        return catalogs.stream().map(c -> transformerRegistry.transform(c, JsonObject.class))
+
+        return catalogs.stream()
+                .map(c -> flatten ? FederatedCatalogUtil.flatten(c) : c)
+                .map(c -> transformerRegistry.transform(c, JsonObject.class))
                 .filter(Result::succeeded)
                 .map(AbstractResult::getContent)
                 .collect(toJsonArray());

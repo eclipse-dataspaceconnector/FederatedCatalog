@@ -44,7 +44,7 @@ public class FederatedCatalogApiExtension implements ServiceExtension {
     public static final String NAME = "Cache Query API Extension";
     private static final String CATALOG_QUERY_SCOPE = "CATALOG_QUERY_API";
 
-    private static final String API_VERSION_JSON_FILE = "version.json";
+    private static final String API_VERSION_JSON_FILE = "fc-api-version.json";
 
     @Inject
     private WebService webService;

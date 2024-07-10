@@ -18,10 +18,7 @@ import org.eclipse.edc.connector.controlplane.catalog.spi.Catalog;
 import org.eclipse.edc.connector.controlplane.catalog.spi.DataService;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Dataset;
 import org.eclipse.edc.connector.controlplane.catalog.spi.Distribution;
-import org.eclipse.edc.connector.controlplane.contract.spi.types.offer.ContractOffer;
 import org.eclipse.edc.crawler.spi.TargetNode;
-import org.eclipse.edc.crawler.spi.WorkItem;
-import org.eclipse.edc.policy.model.Policy;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -32,28 +29,19 @@ public class TestUtil {
 
     public static final String TEST_PROTOCOL = "test-protocol";
 
-    public static WorkItem createWorkItem() {
-        return new WorkItem("id", "test-url", "test-protocol");
-    }
-
-    @NotNull
-    public static ContractOffer createOffer(String id) {
-        return ContractOffer.Builder.newInstance()
-                .id(id)
-                .assetId(id)
-                .policy(Policy.Builder.newInstance().build())
+    public static Catalog createCatalog(String id) {
+        var dataService = DataService.Builder.newInstance().build();
+        return buildCatalog(id)
+                .datasets(List.of(Dataset.Builder.newInstance().id(id + "-dataset").distributions(List.of(Distribution.Builder.newInstance().dataService(dataService).format("test-format").build())).build()))
+                .dataServices(List.of(dataService))
                 .build();
     }
 
-    public static Catalog createCatalog(String id) {
-        var dataService = DataService.Builder.newInstance().build();
+    public static Catalog.Builder buildCatalog(String id) {
         return Catalog.Builder.newInstance()
                 .participantId("test-participant")
                 .id(id)
-                .dataServices(List.of(dataService))
-                .datasets(List.of(Dataset.Builder.newInstance().distributions(List.of(Distribution.Builder.newInstance().dataService(dataService).format("test-format").build())).build()))
-                .properties(new HashMap<>())
-                .build();
+                .properties(new HashMap<>());
     }
 
     @NotNull

@@ -18,7 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
-import org.eclipse.edc.catalog.cache.query.BatchedCatalogRequestFetcher;
+import org.eclipse.edc.catalog.cache.query.PagingCatalogFetcher;
 import org.eclipse.edc.catalog.spi.CatalogConstants;
 import org.eclipse.edc.catalog.transform.JsonObjectToCatalogTransformer;
 import org.eclipse.edc.catalog.transform.JsonObjectToDataServiceTransformer;
@@ -66,19 +66,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ComponentTest
-class BatchedCatalogRequestFetcherTest {
+class PagingCatalogFetcherTest {
 
     private final RemoteMessageDispatcherRegistry dispatcherRegistryMock = mock();
     private final ObjectMapper objectMapper = createObjectMapper();
     private final TitaniumJsonLd jsonLdService = new TitaniumJsonLd(mock());
     private final TypeTransformerRegistry typeTransformerRegistry = new TypeTransformerRegistryImpl();
-    private BatchedCatalogRequestFetcher fetcher;
+    private PagingCatalogFetcher fetcher;
 
     @BeforeEach
     void setup() {
         registerTransformers();
 
-        fetcher = new BatchedCatalogRequestFetcher(dispatcherRegistryMock, mock(), objectMapper, typeTransformerRegistry, jsonLdService);
+        fetcher = new PagingCatalogFetcher(dispatcherRegistryMock, mock(), objectMapper, typeTransformerRegistry, jsonLdService);
     }
 
     @Test

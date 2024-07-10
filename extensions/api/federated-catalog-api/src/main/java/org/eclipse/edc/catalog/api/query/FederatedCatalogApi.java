@@ -16,6 +16,7 @@ package org.eclipse.edc.catalog.api.query;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,6 +35,7 @@ import org.eclipse.edc.api.model.ApiCoreSchema;
 public interface FederatedCatalogApi {
     @Operation(description = "Obtains all Catalog currently held by this cache instance",
             requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiCoreSchema.QuerySpecSchema.class))),
+            parameters = @Parameter(name = "flatten", description = "Whether the resulting root catalog should be 'flattened' or contain a hierarchy of catalogs"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "A list of Catalog is returned, potentially empty",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = CatalogSchema.class)))),
@@ -41,7 +43,7 @@ public interface FederatedCatalogApi {
             }
 
     )
-    JsonArray getCachedCatalog(JsonObject querySpec);
+    JsonArray getCachedCatalog(JsonObject querySpec, boolean flatten);
 
 
     @Schema(name = "Catalog", description = "DCAT catalog", example = CatalogSchema.CATALOG_EXAMPLE)

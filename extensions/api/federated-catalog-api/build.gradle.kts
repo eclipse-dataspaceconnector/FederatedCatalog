@@ -21,6 +21,7 @@ dependencies {
     api(project(":spi:federated-catalog-spi"))
     api(libs.edc.spi.core)
     api(libs.edc.spi.contract)
+    implementation(project(":core:common:lib:catalog-util-lib"))
     implementation(libs.edc.spi.transform)
     implementation(libs.edc.spi.web)
     implementation(libs.edc.lib.jerseyproviders)

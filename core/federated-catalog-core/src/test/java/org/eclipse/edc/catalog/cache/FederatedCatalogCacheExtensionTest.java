@@ -27,6 +27,7 @@ import org.eclipse.edc.crawler.spi.model.RecurringExecutionPlan;
 import org.eclipse.edc.junit.extensions.DependencyInjectionExtension;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.spi.system.configuration.Config;
 import org.eclipse.edc.spi.system.health.HealthCheckService;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,14 +40,18 @@ import java.util.List;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.eclipse.edc.catalog.cache.FederatedCatalogCacheExtension.CRAWLING_ENABLED_PROPERTY;
 import static org.eclipse.edc.catalog.test.TestUtil.TEST_PROTOCOL;
 import static org.eclipse.edc.catalog.test.TestUtil.createCatalog;
 import static org.eclipse.edc.catalog.test.TestUtil.createNode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(DependencyInjectionExtension.class)
@@ -93,6 +98,23 @@ class FederatedCatalogCacheExtensionTest {
         extension.initialize(context);
 
         verify(healthCheckServiceMock).addReadinessProvider(any());
+    }
+
+    @Test
+    void initialize_withDisabledExecution(ServiceExtensionContext context, ObjectFactory factory) {
+        var mockedConfig = mock(Config.class);
+        when(mockedConfig.getBoolean(eq(CRAWLING_ENABLED_PROPERTY), anyBoolean())).thenReturn(false);
+        when(context.getConfig()).thenReturn(mockedConfig);
+        var mockedPlan = mock(ExecutionPlan.class);
+        context.registerService(ExecutionPlan.class, mockedPlan);
+
+        extension = factory.constructInstance(FederatedCatalogCacheExtension.class);
+
+        extension.initialize(context);
+        extension.start();
+
+        verifyNoInteractions(mockedPlan);
+
     }
 
     @Test
