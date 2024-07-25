@@ -15,29 +15,32 @@ This repository contains all components needed to build and run a standalone ver
 
 ## Quick start
 
-A basic launcher configured with in-memory stores (i.e. no persistent storage) can be found [here](launchers/). There
-are
-two ways of running Federated Catalog:
+A basic launcher configured with in-memory stores (i.e. no persistent storage) can be
+found [here](launchers/catalog-mocked). Note that this runtime also contains a _mocked identity service_, for demo
+purposes. There is another variant called `catalog-dcp` which uses DCP as identity system and thus requires a properly
+configured DCP infrastructure to be set up. There are two ways of running Federated Catalog:
 
 1. As native Java process
 2. Inside a Docker image
 
-### Build the `*.jar` file
+### Build the `*.jar` files
 
 ```bash
-./gradlew :launchers:shadowJar
+./gradlew shadowJar
+# or
+./gradlew -p launchers shadowJar
 ```
 
 ### Start Federated Catalog as Java process
 
-Once the jar file is built, Federated Catalog can be launched using this shell command:
+Once the jar files are built, Federated Catalog can be launched using this shell command:
 
 ```bash
 java -Dweb.http.catalog.path="/api/catalog" \
      -Dweb.http.catalog.port=8181 \
      -Dweb.http.path="/api" \
      -Dweb.http.port=8080 \
-     -jar launchers/build/libs/fc.jar
+     -jar launchers/catalog-mocked/build/libs/fc-mocked.jar
 ```
 
 this will expose the Catalog API at `http://localhost:8181/api/catalog`. More information about Federated Catalog's APIs
@@ -46,7 +49,7 @@ can be found [here](docs/developer/architecture/federated-catalog-apis).
 ### Create the Docker image
 
 ```bash
-docker build -t fc ./launchers
+docker build -t fc ./launchers/catalog-mocked
 ```
 
 ### Start the Federated Catalog
@@ -60,7 +63,7 @@ docker run  --rm --name fc \
     fc:latest
 ```
 
-## Architectural concepts of IdentityHub
+## Architectural concepts of the Federated Catalog
 
 Key architectural concepts are
 outlined [here](docs/developer/architecture/federated-catalog.architecture.md).
@@ -74,7 +77,6 @@ detail [here](docs/developer/architecture/federated-catalog-apis.md).
 
 - Generalization of the Crawler class
 - Additional informational endpoints to the [Catalog API](docs/developer/architecture/federated-catalog.architecture.md)
-- PostgreSQL implementation for the `FederatedCacheStore`
 
 ## Other documentation
 

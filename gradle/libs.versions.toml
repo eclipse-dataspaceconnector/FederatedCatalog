@@ -3,10 +3,12 @@ format.version = "1.1"
 
 [versions]
 awaitility = "4.2.0"
-edc = "0.7.2-SNAPSHOT"
+edc = "0.8.1-SNAPSHOT"
 failsafe = "3.3.2"
-restAssured = "5.4.0"
+restAssured = "5.5.0"
 jackson = "2.17.2"
+jupiter = "5.10.3"
+assertj = "3.26.3"
 
 [libraries]
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
@@ -33,7 +35,7 @@ edc-dcp = { module = "org.eclipse.edc:identity-trust", version.ref = "edc" }
 edc-did-core = { module = "org.eclipse.edc:identity-did-core", version.ref = "edc" }
 edc-did-web = { module = "org.eclipse.edc:identity-did-web", version.ref = "edc" }
 edc-oauth2-client = { module = "org.eclipse.edc:oauth2-client", version.ref = "edc" }
-
+edc-core-sql = { module = "org.eclipse.edc:sql-core", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-json-ld-lib = { module = "org.eclipse.edc:json-ld-lib", version.ref = "edc" }
 edc-spi-catalog = { module = "org.eclipse.edc:catalog-spi", version.ref = "edc" }
@@ -45,6 +47,7 @@ edc-spi-dsp-http = { module = "org.eclipse.edc:dsp-http-spi", version.ref = "edc
 edc-spi-jsonld = { module = "org.eclipse.edc:json-ld-spi", version.ref = "edc" }
 edc-spi-transform = { module = "org.eclipse.edc:transform-spi", version.ref = "edc" }
 edc-spi-dataplane-selector = { module = "org.eclipse.edc:data-plane-selector-spi", version.ref = "edc" }
+edc-spi-transaction-datasource = { module = "org.eclipse.edc:transaction-datasource-spi", version.ref = "edc" }
 failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }
 restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
 
@@ -66,7 +69,8 @@ edc-controlplane-transform = { module = "org.eclipse.edc:control-plane-transform
 
 # third-party desp
 jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiter" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
 [bundles]
 edc-connector = ["edc-boot", "edc-core-connector", "edc-core-jersey", "edc-api-observability"]

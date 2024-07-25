@@ -42,6 +42,8 @@ dependencies {
     testImplementation(libs.edc.junit)
     testImplementation(libs.edc.ext.http)
     testImplementation(libs.awaitility)
+
+    testImplementation(testFixtures(project(":spi:federated-catalog-spi")))
 }
 
 edcBuild {

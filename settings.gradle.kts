@@ -8,6 +8,7 @@ include(":core:federated-catalog-core")
 include(":core:common:lib:catalog-util-lib")
 
 include(":extensions:api:federated-catalog-api")
+include(":extensions:store:sql:federated-catalog-cache-sql")
 include(":launchers:catalog-base")
 include(":launchers:catalog-dcp")
 include(":launchers:catalog-mocked")

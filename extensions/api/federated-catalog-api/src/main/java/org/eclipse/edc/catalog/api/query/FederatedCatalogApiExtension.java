@@ -34,6 +34,12 @@ import org.eclipse.edc.web.spi.WebService;
 import java.io.IOException;
 
 import static org.eclipse.edc.catalog.spi.FccApiContexts.CATALOG_QUERY;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DCAT_PREFIX;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DCAT_SCHEMA;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DCT_PREFIX;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DCT_SCHEMA;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DSPACE_PREFIX;
+import static org.eclipse.edc.jsonld.spi.Namespaces.DSPACE_SCHEMA;
 import static org.eclipse.edc.policy.model.OdrlNamespace.ODRL_PREFIX;
 import static org.eclipse.edc.policy.model.OdrlNamespace.ODRL_SCHEMA;
 import static org.eclipse.edc.spi.constants.CoreConstants.JSON_LD;
@@ -73,6 +79,10 @@ public class FederatedCatalogApiExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         jsonLd.registerNamespace(ODRL_PREFIX, ODRL_SCHEMA, CATALOG_QUERY_SCOPE);
+        jsonLd.registerNamespace(DCAT_PREFIX, DCAT_SCHEMA, CATALOG_QUERY_SCOPE);
+        jsonLd.registerNamespace(DCT_PREFIX, DCT_SCHEMA, CATALOG_QUERY_SCOPE);
+        jsonLd.registerNamespace(DSPACE_PREFIX, DSPACE_SCHEMA, CATALOG_QUERY_SCOPE);
+        
         var jsonLdMapper = typeManager.getMapper(JSON_LD);
         var catalogController = new FederatedCatalogApiController(queryService, transformerRegistry);
         webService.registerResource(CATALOG_QUERY, catalogController);
