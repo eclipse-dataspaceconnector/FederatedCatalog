@@ -17,7 +17,7 @@ EXPOSE 8182
 ENV WEB_HTTP_PORT="8181"
 ENV WEB_HTTP_PATH="/api"
 
-HEALTHCHECK --interval=5s --timeout=5s --retries=10 CMD curl --fail http://localhost:8181/api/check/health
+HEALTHCHECK --interval=5s --timeout=5s --retries=10 CMD curl --fail http://localhost:$WEB_HTTP_PORT$WEB_HTTP_PATH/check/health
 
 # Use "exec" for graceful termination (SIGINT) to reach JVM.
 # ARG can not be used in ENTRYPOINT so storing value in an ENV variable
